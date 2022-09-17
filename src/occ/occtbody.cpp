@@ -301,10 +301,10 @@ void OCCTBody::Tesselate(
     Eigen::VectorXi& VtoT) {
     // Setup faceting call options
     // TODO: give control over linear deflection
-    double linear_deflection = 0.1;
+    double linear_deflection = 0.1; // 0.001;
 
     // Facet the body
-    BRepMesh_IncrementalMesh(_shape, linear_deflection);
+    BRepMesh_IncrementalMesh(_shape, linear_deflection); // ,false, 0.1);
 
     // Gather vertices and triangles from faces of _shape
     std::unordered_map<gp_Pnt, int, gp_Pnt_Hash, gp_Pnt_Pred> pnt_idxs;
