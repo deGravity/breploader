@@ -33,7 +33,9 @@ public:
         Eigen::MatrixXi& F,
         Eigen::VectorXi& FtoT,
         Eigen::MatrixXi& EtoT,
-        Eigen::VectorXi& VtoT) = 0;
+        Eigen::VectorXi& VtoT,
+        bool set_quality = false,
+        double quality = 0.01) = 0;
 
     virtual void debug() = 0;
 };
@@ -56,7 +58,9 @@ public:
         Eigen::MatrixXi& F,
         Eigen::VectorXi& FtoT,
         Eigen::MatrixXi& EtoT,
-        Eigen::VectorXi& VtoT);
+        Eigen::VectorXi& VtoT,
+        bool set_quality = false,
+        double quality = 0.01);
 
     void debug();
 
@@ -82,7 +86,9 @@ public:
         Eigen::MatrixXi& F,
         Eigen::VectorXi& FtoT,
         Eigen::MatrixXi& EtoT,
-        Eigen::VectorXi& VtoT);
+        Eigen::VectorXi& VtoT,
+        bool set_quality = false,
+        double quality = 0.01);
 
     void debug();
 

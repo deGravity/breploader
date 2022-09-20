@@ -298,13 +298,25 @@ void OCCTBody::Tesselate(
     Eigen::MatrixXi& F,
     Eigen::VectorXi& FtoT,
     Eigen::MatrixXi& EtoT,
-    Eigen::VectorXi& VtoT) {
+    Eigen::VectorXi& VtoT,
+    bool set_quality,
+    double quality) {
     // Setup faceting call options
     // TODO: give control over linear deflection
-    double linear_deflection = 0.1; // 0.001;
+    double linear_deflection = 0.01;
+
+    if (set_quality) {
+        linear_deflection = quality;
+    }
+
+    // LinearDeflection - limits distance between a curve and its tesselation
+    // AngularDeflection limits angle between subsequent segments in a polyline
+    // DeflectionInterior - limits distance between triangles and face interior
+    // AngleInterior (B-spline faces only) limits angle between triangle corner normals not on face boundaries
+    // face boundaries use angular deflection instead
 
     // Facet the body
-    BRepMesh_IncrementalMesh(_shape, linear_deflection); // ,false, 0.1);
+    BRepMesh_IncrementalMesh(_shape, linear_deflection ,false, 0.5, true);
 
     // Gather vertices and triangles from faces of _shape
     std::unordered_map<gp_Pnt, int, gp_Pnt_Hash, gp_Pnt_Pred> pnt_idxs;

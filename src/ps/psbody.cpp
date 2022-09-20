@@ -272,7 +272,9 @@ void PSBody::Tesselate(
     Eigen::MatrixXi& F,
     Eigen::VectorXi& FtoT,
     Eigen::MatrixXi& EtoT,
-    Eigen::VectorXi& VtoT) {
+    Eigen::VectorXi& VtoT,
+    bool set_quality,
+    double quality) {
     PK_ERROR_t err = PK_ERROR_no_errors;
 
     // Setup faceting call options
@@ -289,6 +291,19 @@ void PSBody::Tesselate(
     facet_options.choice.point_vec = PK_LOGICAL_true;
     facet_options.choice.point_topol = PK_LOGICAL_true;
     facet_options.choice.fin_edge = PK_LOGICAL_true;
+
+    if (set_quality) {
+        facet_options.control.is_curve_chord_tol = true;
+        facet_options.control.curve_chord_tol = quality;
+    }
+    // curve_chord_tol - max distance between chord and curve it approximates
+    // curve_chord_ang - max angle between chord and originating curve
+    // curve_chord_max - max length of chord that can approximate a curve
+    
+    // surface_plane_tol - upper bound from facet to surface
+    // surface_plane_ang - maximum angle between facet and surface
+    //                     (sum of angular dev between surf and facet norm
+    //                      at any 2 positions within boundary)
 
     // Facet the body
     PK_TOPOL_facet_2_r_t facets;
