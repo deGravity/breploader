@@ -35,10 +35,13 @@ struct TopoRelation {
         switch (sense) {
         case PK_TOPOL_sense_negative_c:
             _sense = TopoRelationSense::Negative;
+            break;
         case PK_TOPOL_sense_positive_c:
             _sense = TopoRelationSense::Positive;
+            break;
         default:
             _sense = TopoRelationSense::None;
+            break;
         }
     }
 
