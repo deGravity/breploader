@@ -5,6 +5,7 @@
 #include <parasolid.h>
 #include <assert.h>
 #include <algorithm>
+#include <numeric>
 
 namespace pspy {
 
@@ -833,7 +834,9 @@ bool PSFace::sample_surface(
     const int N_uv_samples,
     Eigen::MatrixXd& uv_bounds, 
     Eigen::MatrixXd& uv_coords, 
-    Eigen::MatrixXd& uv_samples
+    Eigen::MatrixXd& uv_samples,
+    bool sorted_sample,
+    double sorted_frac
 )
 {
     // Find UV bounding box
@@ -851,7 +854,7 @@ bool PSFace::sample_surface(
         return false;
     }
 
-    // Randomly Choose referenc sample points in [0,1]
+    // Randomly Choose reference sample points in [0,1]
     Eigen::MatrixXd ref_coords = Eigen::MatrixXd::Random(N_ref_samples, 2); // in [-1,1]
     ref_coords.array() *= 0.6; // Compress to [-0.6, .6]
     ref_coords.array() += 0.5; // Shift to [-0.1, 1.1]
@@ -919,78 +922,169 @@ bool PSFace::sample_surface(
     insideKDTree.index->buildIndex();
     outsideKDTree.index->buildIndex();
 
-    // Randomly Permute Points to Sample
-    std::vector<int> range(N_ref_samples);
-    for (int i = 0; i < N_ref_samples; ++i) {
-        range[i] = i;
+    if (sorted_sample) {
+
+        // Get All Distances for Sorting
+        std::vector<double> sqDist;
+        for (int i = 0; i < N_ref_samples; ++i) {
+            Eigen::Index closestIdx;
+            double dist_sq;
+            double query_point[2];
+            query_point[0] = ref_coords(i, 0);
+            query_point[1] = ref_coords(i, 1);
+            if (is_inside[i]) {
+                outsideKDTree.query(query_point, 1, &closestIdx, &dist_sq);
+            }
+            else {
+                insideKDTree.query(query_point, 1, &closestIdx, &dist_sq);
+            }
+            sqDist.push_back(dist_sq);
+        }
+
+        // Sort Samples by distance from 0 level set
+        std::vector<size_t> index(sqDist.size());
+        std::iota(index.begin(), index.end(), 0); // range(0, N_ref_samples)
+        std::stable_sort(index.begin(), index.end(), // sort idx by sqDist value
+            [&sqDist](size_t i1, size_t i2) {return sqDist[i1] < sqDist[i2]; });
+
+        // Perturb sort so that half of requested samples are random to get 
+        // points away from boundaries as well
+        std::random_shuffle(index.begin()+((int)(N_uv_samples*sorted_frac)), index.end());
+
+
+        // Compute Sample Values and populate output array
+        PK_VECTOR_t point, normal;
+        PK_UV_t sample_uv;
+        uv_coords.resize(N_uv_samples, 2);
+        uv_samples.resize(N_uv_samples, 7);
+        for (int i = 0; i < N_uv_samples; ++i) {
+            int idx = index[i];
+
+            uv_coords.row(i) = ref_coords.row(idx);
+
+            sample_uv.param[0] = u_samples(idx);
+            sample_uv.param[1] = v_samples(idx);
+            // Eval position and normal
+            err = PK_SURF_eval_with_normal(
+                _surf,
+                sample_uv,
+                0, // no u derivatives
+                0, // no v derivatives
+                PK_LOGICAL_false, // no triangular derivative array
+                &point,
+                &normal
+            );
+
+            if (err == PK_ERROR_at_singularity) {
+                // Use 0 norm for singularities
+                normal.coord[0] = 0;
+                normal.coord[1] = 0;
+                normal.coord[2] = 0;
+            }
+            else if (err == PK_ERROR_eval_failure) {
+                // Assume eval error is in normal calculation (common in cones)
+                // and set norm to 0 in these cases
+                normal.coord[0] = 0;
+                normal.coord[1] = 0;
+                normal.coord[2] = 0;
+            }
+            else if (err != PK_ERROR_no_errors) {
+                delete[] point_topos; // TODO - consolidate deletes
+                delete[] uv_grid;
+                return false; // Break if other error in evaluation
+            }
+            for (int j = 0; j < 3; ++j) {
+                ref_positions(i, j) = point.coord[j];
+                ref_normals(i, j) = normal.coord[j];
+            }
+
+            for (int j = 0; j < 3; ++j) {
+                uv_samples(i, j) = point.coord[j];
+                uv_samples(i, j + 3) = normal.coord[j];
+            }
+
+            int dist_sign = is_inside[idx] ? -1 : 1;
+
+            uv_samples(i, 6) = dist_sign * sqrt(sqDist[idx]);
+        }
     }
-    std::random_shuffle(range.begin(), range.end());
+    else {
+        // Randomly Permute Points to Sample
+        std::vector<int> range(N_ref_samples);
+        for (int i = 0; i < N_ref_samples; ++i) {
+            range[i] = i;
+        }
+        std::random_shuffle(range.begin(), range.end());
 
-    // Generate Final Sample
-    uv_coords.resize(N_uv_samples, 2);
-    uv_samples.resize(N_uv_samples, 7);
+        // Generate Final Sample
+        uv_coords.resize(N_uv_samples, 2);
+        uv_samples.resize(N_uv_samples, 7);
 
-    PK_VECTOR_t point, normal;
-    PK_UV_t sample_uv;
-    for (int i = 0; i < N_uv_samples; ++i) {
-        int idx = range[i];
-        Eigen::Index closestIdx;
-        double closestDist;
-        double query_point[2];
-        // Can't just point into the data array since it is col major
-        query_point[0] = ref_coords(idx, 0);
-        query_point[1] = ref_coords(idx, 1);
-        if (is_inside[idx]) {
-            outsideKDTree.query(query_point, 1, &closestIdx, &closestDist);
-            closestDist = -sqrt(closestDist);
-        }
-        else {
-            insideKDTree.query(query_point, 1, &closestIdx, &closestDist);
-            closestDist = sqrt(closestDist);
-        }
+        PK_VECTOR_t point, normal;
+        PK_UV_t sample_uv;
+        for (int i = 0; i < N_uv_samples; ++i) {
+            int idx = range[i];
+            Eigen::Index closestIdx;
+            double closestDist;
+            double query_point[2];
+            // Can't just point into the data array since it is col major
+            query_point[0] = ref_coords(idx, 0);
+            query_point[1] = ref_coords(idx, 1);
+            if (is_inside[idx]) {
+                outsideKDTree.query(query_point, 1, &closestIdx, &closestDist);
+                closestDist = -sqrt(closestDist);
+            }
+            else {
+                insideKDTree.query(query_point, 1, &closestIdx, &closestDist);
+                closestDist = sqrt(closestDist);
+            }
 
-        uv_coords.row(i) = ref_coords.row(idx);
+            uv_coords.row(i) = ref_coords.row(idx);
 
-        sample_uv.param[0] = u_samples(idx);
-        sample_uv.param[1] = v_samples(idx);
-        // Eval position and normal
-        err = PK_SURF_eval_with_normal(
-            _surf,
-            sample_uv,
-            0, // no u derivatives
-            0, // no v derivatives
-            PK_LOGICAL_false, // no triangular derivative array
-            &point,
-            &normal
-        );
+            sample_uv.param[0] = u_samples(idx);
+            sample_uv.param[1] = v_samples(idx);
+            // Eval position and normal
+            err = PK_SURF_eval_with_normal(
+                _surf,
+                sample_uv,
+                0, // no u derivatives
+                0, // no v derivatives
+                PK_LOGICAL_false, // no triangular derivative array
+                &point,
+                &normal
+            );
 
-        if (err == PK_ERROR_at_singularity) {
-            // Use 0 norm for singularities
-            normal.coord[0] = 0;
-            normal.coord[1] = 0;
-            normal.coord[2] = 0;
-        }
-        else if (err == PK_ERROR_eval_failure) {
-            // Assume eval error is in normal calculation (common in cones)
-            // and set norm to 0 in these cases
-            normal.coord[0] = 0;
-            normal.coord[1] = 0;
-            normal.coord[2] = 0;
-        }
-        else if (err != PK_ERROR_no_errors) {
-            return false; // Break if other error in evaluation
-        }
-        for (int j = 0; j < 3; ++j) {
-            ref_positions(i, j) = point.coord[j];
-            ref_normals(i, j) = normal.coord[j];
-        }
+            if (err == PK_ERROR_at_singularity) {
+                // Use 0 norm for singularities
+                normal.coord[0] = 0;
+                normal.coord[1] = 0;
+                normal.coord[2] = 0;
+            }
+            else if (err == PK_ERROR_eval_failure) {
+                // Assume eval error is in normal calculation (common in cones)
+                // and set norm to 0 in these cases
+                normal.coord[0] = 0;
+                normal.coord[1] = 0;
+                normal.coord[2] = 0;
+            }
+            else if (err != PK_ERROR_no_errors) {
+                delete[] point_topos; // TODO - consolidate deletes
+                delete[] uv_grid;
+                return false; // Break if other error in evaluation
+            }
+            for (int j = 0; j < 3; ++j) {
+                ref_positions(i, j) = point.coord[j];
+                ref_normals(i, j) = normal.coord[j];
+            }
 
-        for (int j = 0; j < 3; ++j) {
-            uv_samples(i, j) = point.coord[j];
-            uv_samples(i, j + 3) = normal.coord[j];
+            for (int j = 0; j < 3; ++j) {
+                uv_samples(i, j) = point.coord[j];
+                uv_samples(i, j + 3) = normal.coord[j];
+            }
+            uv_samples(i, 6) = closestDist;
         }
-        uv_samples(i, 6) = closestDist;
     }
+    
 
     delete[] point_topos;
     delete[] uv_grid;

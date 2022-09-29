@@ -46,7 +46,9 @@ struct Face {
         const int N_uv_samples, // N
         Eigen::MatrixXd& uv_bounds,
         Eigen::MatrixXd& uv_coords, // (Nx2) Sampled Coords normalized to [0,1]
-        Eigen::MatrixXd& uv_samples // (Nx7) x,y,z,n_x,n_y,n_z,m
+        Eigen::MatrixXd& uv_samples, // (Nx7) x,y,z,n_x,n_y,n_z,m
+        bool sorted_sample = false,
+        double sorted_frac = 0.5
     ) = 0;
 
 };
@@ -102,7 +104,9 @@ struct PSFace: public Face {
         const int N_uv_samples, // N
         Eigen::MatrixXd& uv_bounds,
         Eigen::MatrixXd& uv_coords, // (Nx2) Sampled Coords normalized to [0,1]
-        Eigen::MatrixXd& uv_samples // (Nx7) x,y,z,n_x,n_y,n_z,m
+        Eigen::MatrixXd& uv_samples, // (Nx7) x,y,z,n_x,n_y,n_z,m
+        bool sample_surface = true,
+        double sorted_frac = 0.5
     ) override;
 };
 
@@ -149,7 +153,9 @@ struct OCCTFace: public Face {
         const int N_uv_samples, // N
         Eigen::MatrixXd& uv_bounds,
         Eigen::MatrixXd& uv_coords, // (Nx2) Sampled Coords normalized to [0,1]
-        Eigen::MatrixXd& uv_samples // (Nx7) x,y,z,n_x,n_y,n_z,m
+        Eigen::MatrixXd& uv_samples, // (Nx7) x,y,z,n_x,n_y,n_z,m
+        bool sample_surface = true,
+        double sorted_frac = 0.5
     ) override;
 
 };

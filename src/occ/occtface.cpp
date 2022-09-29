@@ -411,7 +411,9 @@ namespace pspy {
         const int N_uv_samples,
         Eigen::MatrixXd& uv_bounds,
         Eigen::MatrixXd& uv_coords,
-        Eigen::MatrixXd& uv_samples
+        Eigen::MatrixXd& uv_samples,
+        bool sorted_sample,
+        double sorted_frac
     ) {
         // Only try evaluating a surface if it exists
         if (!_has_surface) {
