@@ -73,6 +73,40 @@ BREPTopology PSBody::GetTopology() {
         &children,
         &senses);
     assert(err == PK_ERROR_no_errors); // PK_BODY_ask_topology
+
+    // Get Names for parts generated in OnShape
+    std::map<int, std::string> topo_to_id;
+    int num_attdefs;
+    PK_ATTDEF_t* attdefs;
+
+    err = PK_PART_ask_all_attdefs(_id, &num_attdefs, &attdefs);
+    assert(err == PK_ERROR_no_errors); // PK_PART_as_all_attdefs
+    for (int i = 0; i < num_attdefs; ++i) {
+        PK_ATTDEF_t attdef = attdefs[i];
+        PK_ATTDEF_sf_t def;
+        PK_ATTDEF_ask(attdef, &def);
+
+        if (strcmp(def.name, "BTI/ExportID") == 0) {
+            int num_attribs;
+            PK_ATTRIB_t* attribs;
+            PK_PART_ask_all_attribs(_id, attdef, &num_attribs, &attribs);
+            assert(err == PK_ERROR_no_errors); // PK_PART_ask_all_attribs
+
+            for (int j = 0; j < num_attribs; ++j) {
+                PK_ATTRIB_t attrib = attribs[j];
+                char* buffer;
+                PK_ATTRIB_ask_string(attrib, 0, &buffer);
+                assert(err == PK_ERROR_no_errors); // PK_ATTRIB_ask_string
+                PK_ENTITY_t owner;
+                PK_ATTRIB_ask_owner(attrib, &owner);
+                assert(err == PK_ERROR_no_errors); // PK_ATTRIB_ask_owner
+                std::string id(buffer);
+                topo_to_id[owner] = id;
+                delete buffer;
+            }
+        }
+    }
+
     BREPTopology topology;
 
     std::map<int, int> cat_idx;
@@ -82,19 +116,19 @@ BREPTopology PSBody::GetTopology() {
         switch (classes[i]) {
         case PK_CLASS_face:
             cat_idx[i] = topology.faces.size();
-            topology.faces.emplace_back(new PSFace(topols[i]));
+            topology.faces.emplace_back(new PSFace(topols[i], topo_to_id[topols[i]]));
             break;
         case PK_CLASS_loop:
             cat_idx[i] = topology.loops.size();
-            topology.loops.emplace_back(new PSLoop(topols[i]));
+            topology.loops.emplace_back(new PSLoop(topols[i], topo_to_id[topols[i]]));
             break;
         case PK_CLASS_edge:
             cat_idx[i] = topology.edges.size();
-            topology.edges.emplace_back(new PSEdge(topols[i]));
+            topology.edges.emplace_back(new PSEdge(topols[i], topo_to_id[topols[i]]));
             break;
         case PK_CLASS_vertex:
             cat_idx[i] = topology.vertices.size();
-            topology.vertices.emplace_back(new PSVertex(topols[i]));
+            topology.vertices.emplace_back(new PSVertex(topols[i], topo_to_id[topols[i]]));
             break;
         default:
             break;

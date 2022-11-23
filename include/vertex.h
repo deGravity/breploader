@@ -10,13 +10,14 @@ namespace pspy {
 
 struct Vertex {
     Eigen::Vector3d position;
+    std::string export_id;
 
     virtual std::vector<Inference> get_inferences() = 0;
 
 };
 
 struct PSVertex: public Vertex {
-    PSVertex(int id);
+    PSVertex(int id, std::string export_id);
 
     int _id;
 

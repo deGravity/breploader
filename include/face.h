@@ -12,6 +12,8 @@ namespace pspy {
 struct Face {
     virtual std::vector<Inference> get_inferences() = 0;
 
+    std::string export_id;
+
     bool _has_surface;
     SurfaceFunction function;
     std::vector<double> parameters;
@@ -54,7 +56,7 @@ struct Face {
 };
 
 struct PSFace: public Face {
-    PSFace(int id);
+    PSFace(int id, std::string export_id);
 
     void init_parametric_function();
 

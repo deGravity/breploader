@@ -14,6 +14,8 @@ namespace pspy {
 struct Edge {
     virtual std::vector<Inference> get_inferences() = 0;
 
+    std::string export_id;
+
     CurveFunction function;
     std::vector<double> parameters;
 
@@ -53,7 +55,7 @@ struct Edge {
 };
 
 struct PSEdge: public Edge {
-    PSEdge(int id);
+    PSEdge(int id, std::string export_id);
 
     void init_bb();
     void init_nabb();

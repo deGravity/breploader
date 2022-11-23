@@ -4,8 +4,9 @@
 
 namespace pspy {
 
-PSVertex::PSVertex(int id) {
+PSVertex::PSVertex(int id, std::string export_id) {
     _id = id;
+    this->export_id = export_id;
 
     PK_ERROR_t err = PK_ERROR_no_errors;
 

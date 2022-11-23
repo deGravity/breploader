@@ -14,6 +14,7 @@ namespace pspy {
 
 struct Loop {
     virtual std::vector<Inference> get_inferences() = 0;
+    std::string export_id;
 
     LoopType _type;
 
@@ -30,7 +31,7 @@ struct Loop {
 };
 
 struct PSLoop: public Loop {
-    PSLoop(int id);
+    PSLoop(int id, std::string export_id);
 
     std::vector<Inference> get_inferences() override;
 

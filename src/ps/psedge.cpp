@@ -6,8 +6,9 @@
 
 namespace pspy {
 
-PSEdge::PSEdge(int id) {
+PSEdge::PSEdge(int id, std::string export_id) {
     _id = id;
+    this->export_id = export_id;
 
     PK_ERROR_t err = PK_ERROR_no_errors;
     PK_CURVE_t curve;
