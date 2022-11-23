@@ -86,7 +86,7 @@ BREPTopology PSBody::GetTopology() {
         PK_ATTDEF_sf_t def;
         PK_ATTDEF_ask(attdef, &def);
 
-        if (strcmp(def.name, "BTI/ExportID") == 0) {
+        if (strcmp(def.name, "BTI/ExportId") == 0) {
             int num_attribs;
             PK_ATTRIB_t* attribs;
             PK_PART_ask_all_attribs(_id, attdef, &num_attribs, &attribs);
