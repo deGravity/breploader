@@ -265,7 +265,7 @@ Eigen::MatrixXd PSBody::GetBoundingBox() {
     Eigen::MatrixXd corners(2, 3);
     corners <<
         box.coord[0], box.coord[1], box.coord[2],
-        box.coord[3], box.coord[3], box.coord[5];
+        box.coord[3], box.coord[4], box.coord[5];
     return corners;
 }
 
