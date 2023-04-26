@@ -645,7 +645,7 @@ void PSFace::random_sample_points(
         );
         for (int j = 0; j < 3; ++j) {
             samples(i, j) = point.coord[j];
-            samples(i, j + 3) = normal.coord[j];
+            samples(i, j + 3) = orientation ? normal.coord[j] : -normal.coord[j];
         }
     }
 
