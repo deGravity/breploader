@@ -1,7 +1,9 @@
 #ifndef LOOP_H_INCLUDED
 #define LOOP_H_INCLUDED 1
 
+#ifdef PARASOLID
 #include <parasolid.h>
+#endif
 #include "types.h"
 #include <assert.h>
 #include <Eigen/Core>
@@ -30,6 +32,7 @@ struct Loop {
     Eigen::MatrixXd na_bounding_box;
 };
 
+#ifdef PARASOLID
 struct PSLoop: public Loop {
     PSLoop(int id, std::string export_id);
 
@@ -37,6 +40,7 @@ struct PSLoop: public Loop {
 
     int _id;
 };
+#endif
 
 struct OCCTLoop: public Loop {
     OCCTLoop(const TopoDS_Shape& shape, const TopTools_ListOfShape& faces);

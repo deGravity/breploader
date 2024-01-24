@@ -5,6 +5,7 @@
 #include "loop.h"
 #include "edge.h"
 #include "vertex.h"
+#include "types.h"
 
 #include <map>
 #include <vector>
@@ -29,6 +30,13 @@ enum class TopoRelationSense
 
 struct TopoRelation {
 
+    TopoRelation(int parent, int child, TopoRelationSense sense) {
+        _parent = parent;
+        _child = child;
+        _sense = sense;
+    }
+
+#ifdef PARASOLID
     TopoRelation(int parent, int child, int sense) {
         _parent = parent;
         _child = child;
@@ -44,6 +52,7 @@ struct TopoRelation {
             break;
         }
     }
+#endif
 
     int _parent;
     int _child;
@@ -86,7 +95,7 @@ struct BREPTopology {
     std::map<int, int> pk_to_idx;
     // Parasolid Entity Id -> Parasolid Class
     // PK_CLASS_face/loop/edge/vertex
-    std::map<int, int> pk_to_class;
+    std::map<int, TopologyType> pk_to_class;
 };
 
 }

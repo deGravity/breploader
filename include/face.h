@@ -55,6 +55,7 @@ struct Face {
 
 };
 
+#ifdef PARASOLID
 struct PSFace: public Face {
     PSFace(int id, std::string export_id);
 
@@ -111,6 +112,7 @@ struct PSFace: public Face {
         double sorted_frac = 0.5
     ) override;
 };
+#endif
 
 struct OCCTFace: public Face {
     OCCTFace(const TopoDS_Shape& shape);

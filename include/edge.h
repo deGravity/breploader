@@ -54,6 +54,7 @@ struct Edge {
     ) = 0;
 };
 
+#ifdef PARASOLID
 struct PSEdge: public Edge {
     PSEdge(int id, std::string export_id);
 
@@ -85,6 +86,7 @@ struct PSEdge: public Edge {
         Eigen::MatrixXd& t_samples // (Nx6) x,y,z,t_x,t_y,t_z
     );
 };
+#endif
 
 struct OCCTEdge: public Edge {
     OCCTEdge(const TopoDS_Shape& shape, const TopTools_ListOfShape& faces);

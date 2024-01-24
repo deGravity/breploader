@@ -1,7 +1,9 @@
 #ifndef BODY_H_INCLUDED
 #define BODY_H_INCLUDED 1
 
+#ifdef PARASOLID
 #include <parasolid.h>
+#endif
 #include <TopoDS_Shape.hxx>
 #include "face.h"
 #include "loop.h"
@@ -40,6 +42,7 @@ public:
     virtual void debug() = 0;
 };
 
+#ifdef PARASOLID
 class PSBody: public Body {
 public:
     PSBody(int id);
@@ -68,6 +71,7 @@ private:
     int _id;
     bool _valid; // If we need to re-compute due to transforms
 };
+#endif
 
 class OCCTBody: public Body {
 public:
@@ -105,9 +109,11 @@ private:
 // Helper Functions
 std::vector<std::shared_ptr<Body> > read_file(std::string path);
 
+#ifdef PARASOLID
 // PSBody Helper Functions
 bool is_psbody(int id);
 std::vector<std::shared_ptr<Body> > read_xt(std::string path);
+#endif
 
 // OCCTBody Helper Functions
 std::vector<std::shared_ptr<Body> > read_step(std::string path);

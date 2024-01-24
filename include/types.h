@@ -3,7 +3,9 @@
 
 #include <Eigen/Core>
 #include <assert.h>
+#ifdef PARASOLID
 #include <parasolid.h>
+#endif
 #include <gp_Pnt.hxx>
 #include <gp_Mat.hxx>
 #include <BRepGProp.hxx>
@@ -17,7 +19,8 @@ enum class TopologyType {
     FACE,
     EDGE,
     VERTEX,
-    LOOP
+    LOOP,
+    OTHER
 };
 
 enum class SurfaceFunction {
@@ -85,6 +88,7 @@ const double XFRM_TOL = 0.999;
 const double MASS_ACC = 0.999;
 
 struct MassProperties {
+#ifdef PARASOLID
     MassProperties(int* ids, double accuracy = MASS_ACC, int num_ids = 1) {
         PK_ERROR_t err = PK_ERROR_no_errors;
         PK_TOPOL_eval_mass_props_o_t mass_props_options;
@@ -108,6 +112,7 @@ struct MassProperties {
             periphery = 0;
         }
     }
+#endif
 
     MassProperties(const TopoDS_Shape& shape, double accuracy = MASS_ACC) {
         m_of_i.resize(3, 3);

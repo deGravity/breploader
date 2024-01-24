@@ -112,25 +112,29 @@ BREPTopology PSBody::GetTopology() {
     std::map<int, int> cat_idx;
 
     for (int i = 0; i < n_topols; ++i) {
-        topology.pk_to_class[topols[i]] = classes[i];
         switch (classes[i]) {
         case PK_CLASS_face:
             cat_idx[i] = topology.faces.size();
             topology.faces.emplace_back(new PSFace(topols[i], topo_to_id[topols[i]]));
+            topology.pk_to_class[topols[i]] = TopologyType::FACE;
             break;
         case PK_CLASS_loop:
             cat_idx[i] = topology.loops.size();
             topology.loops.emplace_back(new PSLoop(topols[i], topo_to_id[topols[i]]));
+            topology.pk_to_class[topols[i]] = TopologyType::LOOP;
             break;
         case PK_CLASS_edge:
             cat_idx[i] = topology.edges.size();
             topology.edges.emplace_back(new PSEdge(topols[i], topo_to_id[topols[i]]));
+            topology.pk_to_class[topols[i]] = TopologyType::EDGE;
             break;
         case PK_CLASS_vertex:
             cat_idx[i] = topology.vertices.size();
             topology.vertices.emplace_back(new PSVertex(topols[i], topo_to_id[topols[i]]));
+            topology.pk_to_class[topols[i]] = TopologyType::VERTEX;
             break;
         default:
+            topology.pk_to_class[topols[i]] = TopologyType::OTHER;
             break;
         }
         // Update map from pk index to index with each entity type

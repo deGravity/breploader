@@ -16,6 +16,7 @@ struct Vertex {
 
 };
 
+#ifdef PARASOLID
 struct PSVertex: public Vertex {
     PSVertex(int id, std::string export_id);
 
@@ -23,6 +24,7 @@ struct PSVertex: public Vertex {
 
     std::vector<Inference> get_inferences() override;
 };
+#endif
 
 struct OCCTVertex: public Vertex {
     OCCTVertex(const TopoDS_Shape& shape);
