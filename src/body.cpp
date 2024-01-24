@@ -23,7 +23,7 @@ std::vector<std::shared_ptr<Body>> read_file(std::string path) {
 #ifdef PARASOLID
         return read_xt(path);
 #else
-        std::cerr << "breploader not compiled with Parasolid support. Set PARASOLID_BASE environmental variable and recompile to read Parasolid x_t files."
+        std::cerr << "breploader not compiled with Parasolid support. Set PARASOLID_BASE environmental variable and recompile to read Parasolid x_t files.";
         return std::vector<std::shared_ptr<Body>>();
 #endif
     }
@@ -34,7 +34,7 @@ std::vector<std::shared_ptr<Body>> read_file(std::string path) {
 #ifdef PARASOLID
         return read_xt(path);
 #else
-        std::cerr << "breploader not compiled with Parasolid support. Set PARASOLID_BASE environmental variable and recompile to read Parasolid x_t files."
+        std::cerr << "breploader not compiled with Parasolid support. Set PARASOLID_BASE environmental variable and recompile to read Parasolid x_t files.";
         return std::vector<std::shared_ptr<Body>>();
 #endif
     }
