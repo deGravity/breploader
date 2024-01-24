@@ -91,7 +91,7 @@ target_link_libraries(breploader PUBLIC
   TKTopAlgo 
   TKShHealing)
 
-target_compile_definitions(breploader PRIVATE "-DPARASOLID=1")
+target_compile_definitions(breploader PUBLIC "-DPARASOLID=1")
 
 else()
 
